@@ -39,12 +39,14 @@ import pidgely
 
 pidgely.api_key = os.environ["PIDGELY_API_KEY"]
 
-email = pidgely.Emails.send({
-    "from": "Acme <hello@acme.com>",
-    "to": "ana@example.org",
-    "subject": "Welcome to Acme",
-    "html": "<p>Your account is ready.</p>",
-})
+email = pidgely.Emails.send(
+    {
+        "from": "Acme <hello@acme.com>",
+        "to": "ana@example.org",
+        "subject": "Welcome to Acme",
+        "html": "<p>Your account is ready.</p>",
+    }
+)
 print(email["id"])
 ```
 
@@ -68,11 +70,11 @@ async with AsyncPidgely() as client:
 
 ```python
 client = Pidgely(
-    api_key="pdg_...",                  # default: PIDGELY_API_KEY
-    base_url="https://api.pidgely.com", # default: PIDGELY_BASE_URL
-    timeout=30,                         # seconds per attempt (0 disables)
-    max_retries=2,                      # automatic retries, see below
-    user_agent="my-app/1.2.3",          # appended to pidgely-python/<version>
+    api_key="pdg_...",  # default: PIDGELY_API_KEY
+    base_url="https://api.pidgely.com",  # default: PIDGELY_BASE_URL
+    timeout=30,  # seconds per attempt (0 disables)
+    max_retries=2,  # automatic retries, see below
+    user_agent="my-app/1.2.3",  # appended to pidgely-python/<version>
     default_headers={"X-Team": "growth"},
     http_client=httpx.Client(proxy="http://proxy:3128"),  # optional, bring your own
 )
@@ -96,9 +98,9 @@ try:
     pidgely.Emails.send({...})
 except pidgely.ValidationError as e:  # 400 / 422
     print(e.status_code, e.name, e.message)
-except pidgely.RateLimitError as e:   # 429
+except pidgely.RateLimitError as e:  # 429
     print(e.headers.get("retry-after"))
-except pidgely.PidgelyError as e:     # everything else
+except pidgely.PidgelyError as e:  # everything else
     ...
 ```
 
@@ -146,28 +148,32 @@ Parameters use the API's snake_case keys. Examples use the module API; with a cl
 ### Emails
 
 ```python
-email = pidgely.Emails.send({
-    "from": "Acme <hello@acme.com>",
-    "to": ["ana@example.com"],
-    "cc": "team@acme.com",
-    "reply_to": "support@acme.com",
-    "subject": "Your invoice",
-    "html": "<p>Invoice attached.</p>",  # `text` is generated when omitted
-    "attachments": [
-        {"filename": "invoice.pdf", "content": pdf_bytes},  # bytes or base64 string
-        {"filename": "logo.png", "path": "https://acme.com/logo.png", "content_id": "logo"},  # <img src="cid:logo">
-    ],
-    "tags": [{"name": "category", "value": "billing"}],
-    "headers": {"X-Entity-Ref-ID": "inv_1042"},
-    "scheduled_at": "tomorrow at 9am",  # ISO 8601 or natural language, up to 30 days ahead
-})
+email = pidgely.Emails.send(
+    {
+        "from": "Acme <hello@acme.com>",
+        "to": ["ana@example.com"],
+        "cc": "team@acme.com",
+        "reply_to": "support@acme.com",
+        "subject": "Your invoice",
+        "html": "<p>Invoice attached.</p>",  # `text` is generated when omitted
+        "attachments": [
+            {"filename": "invoice.pdf", "content": pdf_bytes},  # bytes or base64 string
+            {"filename": "logo.png", "path": "https://acme.com/logo.png", "content_id": "logo"},  # <img src="cid:logo">
+        ],
+        "tags": [{"name": "category", "value": "billing"}],
+        "headers": {"X-Entity-Ref-ID": "inv_1042"},
+        "scheduled_at": "tomorrow at 9am",  # ISO 8601 or natural language, up to 30 days ahead
+    }
+)
 
 # Send a published template
-pidgely.Emails.send({
-    "from": "Acme <hello@acme.com>",
-    "to": "ana@example.com",
-    "template": {"id": "welcome", "variables": {"NAME": "Ana", "TRIAL_DAYS": 14}},
-})
+pidgely.Emails.send(
+    {
+        "from": "Acme <hello@acme.com>",
+        "to": "ana@example.com",
+        "template": {"id": "welcome", "variables": {"NAME": "Ana", "TRIAL_DAYS": 14}},
+    }
+)
 
 pidgely.Emails.get("4ef9a417-02e9-4d39-ad75-9611e0fcc33c")  # includes last_event
 pidgely.Emails.list({"limit": 20})
@@ -200,7 +206,7 @@ for record in domain["records"]:  # DKIM TXT, return-path MX + SPF TXT, DMARC
     print(record["type"], record["name"], record["value"])
 
 pidgely.Domains.verify(domain["id"])  # check DNS now
-pidgely.Domains.get(domain["id"])     # status: not_started | pending | verified | failed
+pidgely.Domains.get(domain["id"])  # status: not_started | pending | verified | failed
 pidgely.Domains.list()
 pidgely.Domains.update({"id": domain["id"], "tls": "enforced"})
 pidgely.Domains.remove(domain["id"])
@@ -219,13 +225,15 @@ pidgely.ApiKeys.remove(key["id"])
 ### Contacts
 
 ```python
-pidgely.Contacts.create({
-    "email": "ana@example.com",
-    "first_name": "Ana",
-    "last_name": "Lima",
-    "properties": {"plan": "pro", "seats": 5},
-    "segments": [{"id": segment_id}],
-})
+pidgely.Contacts.create(
+    {
+        "email": "ana@example.com",
+        "first_name": "Ana",
+        "last_name": "Lima",
+        "properties": {"plan": "pro", "seats": 5},
+        "segments": [{"id": segment_id}],
+    }
+)
 pidgely.Contacts.list({"segment_id": segment_id, "limit": 100})
 pidgely.Contacts.get({"email": "ana@example.com"})  # or get("ana@example.com") / get({"id": ...})
 pidgely.Contacts.update({"email": "ana@example.com", "unsubscribed": True})  # kept in sync with the suppression list
@@ -252,14 +260,16 @@ pidgely.Segments.remove(segment["id"])
 ### Broadcasts
 
 ```python
-broadcast = pidgely.Broadcasts.create({
-    "segment_id": segment_id,
-    "from": "Acme News <news@acme.com>",
-    "subject": "What’s new in October",
-    "preview_text": "Three features you asked for",
-    "html": '<p>Hi {{{FIRST_NAME|there}}},</p>…<a href="{{{PIDGELY_UNSUBSCRIBE_URL}}}">Unsubscribe</a>',
-    "name": "October newsletter",
-})
+broadcast = pidgely.Broadcasts.create(
+    {
+        "segment_id": segment_id,
+        "from": "Acme News <news@acme.com>",
+        "subject": "What’s new in October",
+        "preview_text": "Three features you asked for",
+        "html": '<p>Hi {{{FIRST_NAME|there}}},</p>…<a href="{{{PIDGELY_UNSUBSCRIBE_URL}}}">Unsubscribe</a>',
+        "name": "October newsletter",
+    }
+)
 
 pidgely.Broadcasts.send(broadcast["id"], {"scheduled_at": "tomorrow at 10am"})  # omit to send now
 pidgely.Broadcasts.cancel(broadcast["id"])
@@ -275,17 +285,19 @@ Pass `"send": True` (with an optional `scheduled_at`) to `create` to send withou
 ### Templates
 
 ```python
-template = pidgely.Templates.create({
-    "name": "Welcome",
-    "alias": "welcome",
-    "from": "Acme <hello@acme.com>",
-    "subject": "Welcome, {{{NAME}}}!",
-    "html": "<p>Hi {{{NAME}}}, your trial lasts {{{TRIAL_DAYS}}} days.</p>",
-    "variables": [
-        {"key": "NAME", "type": "string", "fallback_value": "there"},
-        {"key": "TRIAL_DAYS", "type": "number", "fallback_value": 14},
-    ],
-})
+template = pidgely.Templates.create(
+    {
+        "name": "Welcome",
+        "alias": "welcome",
+        "from": "Acme <hello@acme.com>",
+        "subject": "Welcome, {{{NAME}}}!",
+        "html": "<p>Hi {{{NAME}}}, your trial lasts {{{TRIAL_DAYS}}} days.</p>",
+        "variables": [
+            {"key": "NAME", "type": "string", "fallback_value": "there"},
+            {"key": "TRIAL_DAYS", "type": "number", "fallback_value": 14},
+        ],
+    }
+)
 pidgely.Templates.publish(template["id"])  # the published version is what `template` sends
 
 pidgely.Templates.get("welcome")  # by id or alias (draft)
@@ -298,10 +310,12 @@ pidgely.Templates.remove("welcome")
 ### Webhooks
 
 ```python
-webhook = pidgely.Webhooks.create({
-    "endpoint": "https://acme.com/webhooks/pidgely",
-    "events": ["email.delivered", "email.bounced", "email.complained"],
-})
+webhook = pidgely.Webhooks.create(
+    {
+        "endpoint": "https://acme.com/webhooks/pidgely",
+        "events": ["email.delivered", "email.bounced", "email.complained"],
+    }
+)
 print(webhook["signing_secret"])  # whsec_…, store it to verify deliveries
 
 pidgely.Webhooks.list()
@@ -330,6 +344,7 @@ Pidgely signs every delivery with the [Standard Webhooks](https://www.standardwe
 
 ```python
 import pidgely
+
 
 # Flask
 @app.post("/webhooks/pidgely")

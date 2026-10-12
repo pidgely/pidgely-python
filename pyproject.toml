@@ -1,0 +1,92 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pidgely"
+dynamic = ["version"]
+description = "Official Python SDK for the Pidgely email API (Resend-compatible)."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.9"
+authors = [{ name = "Caotec Serviços em Tecnologia Ltda", email = "dev@fexxo.com.br" }]
+keywords = ["pidgely", "email", "email-api", "transactional-email", "resend", "sdk", "smtp", "webhooks"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Communications :: Email",
+  "Typing :: Typed",
+]
+dependencies = ["httpx>=0.23.0,<1"]
+
+[project.urls]
+Homepage = "https://pidgely.com"
+Documentation = "https://docs.pidgely.com"
+Repository = "https://github.com/pidgely/pidgely-python"
+Issues = "https://github.com/pidgely/pidgely-python/issues"
+Changelog = "https://github.com/pidgely/pidgely-python/blob/main/CHANGELOG.md"
+
+[dependency-groups]
+dev = [
+  "pytest>=8",
+  "pytest-cov>=5",
+  "respx>=0.21",
+  "anyio>=4",
+  "mypy>=1.11",
+  "ruff>=0.6",
+  "build>=1.2",
+  "twine>=5",
+]
+
+[tool.hatch.version]
+path = "src/pidgely/_version.py"
+
+[tool.hatch.build.targets.sdist]
+include = ["src/pidgely", "tests", "README.md", "CHANGELOG.md", "LICENSE"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pidgely"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.coverage.run]
+source = ["pidgely"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+exclude_also = ["if TYPE_CHECKING:", "pragma: no cover"]
+
+[tool.mypy]
+strict = true
+python_version = "3.10"
+files = ["src/pidgely", "tests", "scripts"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_decorators = false
+disable_error_code = ["comparison-overlap"]
+
+[tool.ruff]
+line-length = 170
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "S", "C4", "SIM", "RUF"]
+ignore = ["UP006", "UP007", "UP035", "UP045", "RUF022"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106", "N802"]
+"scripts/**" = ["S"]

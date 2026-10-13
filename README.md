@@ -239,6 +239,18 @@ pidgely.Contacts.get({"email": "ana@example.com"})  # or get("ana@example.com") 
 pidgely.Contacts.update({"email": "ana@example.com", "unsubscribed": True})  # kept in sync with the suppression list
 pidgely.Contacts.remove({"email": "ana@example.com"})
 
+# Upsert up to 1,000 contacts; invalid rows are reported with their index instead of failing the request
+result = pidgely.Contacts.batch(
+    {
+        "contacts": [
+            {"email": "ana@example.com", "first_name": "Ana"},
+            {"email": "bruno@example.com", "properties": {"plan": "team"}},
+        ],
+        "segment_id": segment_id,  # optional: added to every row
+    }
+)
+# result["data"] → [{"index", "id"}], result["errors"] → [{"index", "message"}]
+
 pidgely.Contacts.Segments.list({"email": "ana@example.com"})
 pidgely.Contacts.Segments.add({"email": "ana@example.com", "segment_id": segment_id})
 pidgely.Contacts.Segments.remove({"contact_id": contact_id, "segment_id": segment_id})
@@ -299,6 +311,9 @@ template = pidgely.Templates.create(
     }
 )
 pidgely.Templates.publish(template["id"])  # the published version is what `template` sends
+
+# Render the draft without sending; missing_variables lists variables with no value and no fallback
+preview = pidgely.Templates.preview("welcome", {"variables": {"NAME": "Ana", "TRIAL_DAYS": 30}})
 
 pidgely.Templates.get("welcome")  # by id or alias (draft)
 pidgely.Templates.update("welcome", {"subject": "Welcome aboard, {{{NAME}}}!"})
@@ -386,7 +401,7 @@ Pidgely serves the Resend REST API at the same paths, and this SDK mirrors the `
 3. Verify your domain in Pidgely and publish the DNS records it returns.
 4. If you verify webhooks, use `pidgely.verify_webhook` with the `whsec_…` secret from your Pidgely webhook.
 
-Parameter dictionaries use the same snake_case keys, and the resources keep their names (`Emails`, `Batch`, `Domains`, `ApiKeys`, `Contacts`, `Segments`/`Audiences`, `Broadcasts`, `Templates`, `Webhooks`). Errors are raised as `pidgely.PidgelyError` subclasses instead of `resend.exceptions.ResendError`. Pidgely additions include `Emails.Attachments`, `ApiKeys.update`, `Segments.update/list_contacts`, `Broadcasts.cancel/duplicate`, `Suppressions`, the `stream` field on emails, an async client and built-in retries. Some Resend features are not supported yet: open/click tracking, topics, inbound email, automations, events and logs. See the migration guide at [docs.pidgely.com](https://docs.pidgely.com) for the full list.
+Parameter dictionaries use the same snake_case keys, and the resources keep their names (`Emails`, `Batch`, `Domains`, `ApiKeys`, `Contacts`, `Segments`/`Audiences`, `Broadcasts`, `Templates`, `Webhooks`). Errors are raised as `pidgely.PidgelyError` subclasses instead of `resend.exceptions.ResendError`. Pidgely additions include `Emails.Attachments`, `ApiKeys.update`, `Segments.update/list_contacts`, `Contacts.batch`, `Templates.preview`, `Broadcasts.cancel/duplicate`, `Suppressions`, the `stream` field on emails, an async client and built-in retries. Some Resend features are not supported yet: open/click tracking, topics, inbound email, automations, events and logs. See the migration guide at [docs.pidgely.com](https://docs.pidgely.com) for the full list.
 
 ## Development
 

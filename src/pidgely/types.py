@@ -24,6 +24,8 @@ __all__ = [
     "CreateApiKeyParams",
     "UpdateApiKeyParams",
     "CreateContactParams",
+    "ContactInput",
+    "BatchContactsParams",
     "ContactSelector",
     "UpdateContactParams",
     "ListContactsParams",
@@ -37,6 +39,7 @@ __all__ = [
     "TemplateVariableParams",
     "CreateTemplateParams",
     "UpdateTemplateParams",
+    "PreviewTemplateParams",
     "CreateWebhookParams",
     "UpdateWebhookParams",
     "AddSuppressionParams",
@@ -62,6 +65,8 @@ __all__ = [
     "Contact",
     "ContactList",
     "ContactDeleted",
+    "ContactBatchItem",
+    "ContactBatchResult",
     "Segment",
     "SegmentList",
     "CreatedSegment",
@@ -71,6 +76,7 @@ __all__ = [
     "TemplateVariable",
     "Template",
     "TemplateList",
+    "TemplatePreview",
     "Webhook",
     "WebhookList",
     "WebhookSecret",
@@ -259,6 +265,26 @@ class CreateContactParams(_EmailRequired, total=False):
     """Deprecated: creates the contact through the legacy ``/audiences/{id}/contacts`` route."""
 
 
+class ContactInput(_EmailRequired, total=False):
+    """One row of :class:`BatchContactsParams`: created, or updated when the email exists."""
+
+    first_name: str
+    last_name: str
+    unsubscribed: bool
+    properties: Dict[str, PropertyValue]
+    segments: List[_SegmentRef]
+
+
+class _ContactsRequired(TypedDict):
+    contacts: List[ContactInput]
+    """Up to 1,000 contacts, each saved independently."""
+
+
+class BatchContactsParams(_ContactsRequired, total=False):
+    segment_id: str
+    """Segment every row is added to."""
+
+
 class ContactSelector(TypedDict, total=False):
     """Select a contact by ``id`` or by ``email``."""
 
@@ -379,6 +405,11 @@ class CreateTemplateParams(_NameRequired, _TemplateFields, total=False):
 
 class UpdateTemplateParams(_TemplateFields, total=False):
     name: str
+
+
+class PreviewTemplateParams(TypedDict, total=False):
+    variables: Dict[str, Union[str, int, float]]
+    """Values to render with; variables that are not given use their fallback value."""
 
 
 # --------------------------------------------------------------------------- webhooks
@@ -594,6 +625,19 @@ class CreatedSegment(TypedDict):
     name: str
 
 
+class ContactBatchItem(TypedDict):
+    index: int
+    id: str
+
+
+class ContactBatchResult(TypedDict):
+    """Saved rows in ``data`` and invalid rows in ``errors``, both with their ``index``."""
+
+    object: str
+    data: List[ContactBatchItem]
+    errors: List[BatchError]
+
+
 class ContactSegmentRemoved(TypedDict, total=False):
     object: str
     id: str
@@ -674,6 +718,23 @@ class Template(_TemplateResponseFields, total=False):
 
 class TemplateList(_ListFields):
     data: List[Template]
+
+
+TemplatePreview = TypedDict(
+    "TemplatePreview",
+    {
+        "object": str,
+        "from": str,
+        "subject": str,
+        "reply_to": List[str],
+        "html": str,
+        "text": str,
+        "missing_variables": List[str],
+    },
+    total=False,
+)
+"""A template draft rendered with variables. ``missing_variables`` lists the variables
+with neither a value nor a fallback value."""
 
 
 class Webhook(TypedDict, total=False):

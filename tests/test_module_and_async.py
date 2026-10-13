@@ -30,6 +30,10 @@ def test_module_api_nested_and_aliases(mock: respx.MockRouter) -> None:
     assert route.calls.last.request.url.path == "/contacts/a@b.c/segments/s1"
     pidgely.Suppressions.Batch.add({"emails": ["a@b.c"]})
     assert route.calls.last.request.url.path == "/suppressions/batch/add"
+    pidgely.Templates.preview("welcome", {"variables": {"NAME": "Ana"}})
+    assert route.calls.last.request.url.path == "/templates/welcome/preview"
+    pidgely.Contacts.batch({"contacts": [{"email": "a@b.c"}], "segment_id": "s1"})
+    assert route.calls.last.request.url.path == "/contacts/batch"
     pidgely.ApiKeys.list()
     assert route.calls.last.request.url.path == "/api-keys"
     pidgely.Audiences.get("s1")

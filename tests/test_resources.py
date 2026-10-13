@@ -65,6 +65,16 @@ CASES = [
         None,
         {"email": "ana@x.y"},
     ),
+    (
+        "contacts.batch",
+        lambda c: c.contacts.batch(
+            {"contacts": [{"email": "ana@x.y", "first_name": "Ana", "unsubscribed": False, "segments": [{"id": "s2"}]}, {"email": "bo@x.y"}], "segment_id": "s1"}
+        ),
+        "POST",
+        "/contacts/batch",
+        None,
+        {"contacts": [{"email": "ana@x.y", "first_name": "Ana", "unsubscribed": False, "segments": [{"id": "s2"}]}, {"email": "bo@x.y"}], "segment_id": "s1"},
+    ),
     ("contacts.list", lambda c: c.contacts.list({"segment_id": "s1", "limit": 100}), "GET", "/contacts", {"limit": "100", "segment_id": "s1"}, None),
     ("contacts.list audience", lambda c: c.contacts.list({"audience_id": "a1"}), "GET", "/contacts", {"audience_id": "a1"}, None),
     ("contacts.get str", lambda c: c.contacts.get("ana+x@x.y"), "GET", "/contacts/ana+x@x.y", None, None),
@@ -130,6 +140,15 @@ CASES = [
     ("templates.remove", lambda c: c.templates.remove("welcome"), "DELETE", "/templates/welcome", None, None),
     ("templates.publish", lambda c: c.templates.publish("welcome"), "POST", "/templates/welcome/publish", None, None),
     ("templates.duplicate", lambda c: c.templates.duplicate("welcome"), "POST", "/templates/welcome/duplicate", None, None),
+    (
+        "templates.preview",
+        lambda c: c.templates.preview("welcome", {"variables": {"NAME": "Ana", "DAYS": 14}}),
+        "POST",
+        "/templates/welcome/preview",
+        None,
+        {"variables": {"NAME": "Ana", "DAYS": 14}},
+    ),
+    ("templates.preview no variables", lambda c: c.templates.preview("wel come"), "POST", "/templates/wel%20come/preview", None, {}),
     # Webhooks
     (
         "webhooks.create",
@@ -236,6 +255,19 @@ def test_batch_send(client: pidgely.Pidgely, mock: respx.MockRouter) -> None:
     assert "x-batch-validation" not in route.calls.last.request.headers
 
 
+def test_typed_responses(client: pidgely.Pidgely, mock: respx.MockRouter) -> None:
+    preview = {"object": "template_preview", "subject": "Hi Ana", "html": "<p>Hi Ana</p>", "text": "Hi Ana", "missing_variables": ["DAYS"]}
+    mock.post("/templates/welcome/preview").mock(return_value=httpx.Response(200, json=preview))
+    p = client.templates.preview("welcome", {"variables": {"NAME": "Ana"}})
+    assert p["subject"] == "Hi Ana"
+    assert p["missing_variables"] == ["DAYS"]
+    result = {"object": "list", "data": [{"index": 0, "id": "c1"}], "errors": [{"index": 1, "message": "email: is invalid"}]}
+    mock.post("/contacts/batch").mock(return_value=httpx.Response(200, json=result))
+    r = client.contacts.batch({"contacts": [{"email": "ana@x.y"}, {"email": "bad"}]})
+    assert r["data"][0] == {"index": 0, "id": "c1"}
+    assert r["errors"][0]["index"] == 1
+
+
 @pytest.mark.parametrize(
     "call",
     [
@@ -250,6 +282,7 @@ def test_batch_send(client: pidgely.Pidgely, mock: respx.MockRouter) -> None:
         lambda c: c.contacts.segments.list({}),
         lambda c: c.contacts.segments.add({"email": "a@b.c"}),
         lambda c: c.templates.publish(""),
+        lambda c: c.templates.preview(""),
         lambda c: c.suppressions.get(""),
     ],
 )

@@ -9,12 +9,14 @@ from ..types import (
     AddSuppressionParams,
     ApiKeyList,
     BatchAddSuppressionsParams,
+    BatchContactsParams,
     BatchRemoveSuppressionsParams,
     BatchRequestOptions,
     BatchResponse,
     Broadcast,
     BroadcastList,
     Contact,
+    ContactBatchResult,
     ContactDeleted,
     ContactList,
     ContactSegmentParams,
@@ -44,6 +46,7 @@ from ..types import (
     ListParams,
     ListSuppressionsParams,
     ObjectId,
+    PreviewTemplateParams,
     RequestOptions,
     Segment,
     SegmentList,
@@ -55,6 +58,7 @@ from ..types import (
     SuppressionsRemoved,
     Template,
     TemplateList,
+    TemplatePreview,
     UpdateApiKeyParams,
     UpdateBroadcastParams,
     UpdateContactParams,
@@ -263,6 +267,11 @@ class AsyncContacts(_Resource):
         path = f"/audiences/{seg(audience)}/contacts" if audience else "/contacts"
         return cast(ObjectId, await self._client._request("POST", path, body=without(params, "audience_id"), options=options))
 
+    async def batch(self, params: BatchContactsParams, options: Optional[RequestOptions] = None) -> ContactBatchResult:
+        """``POST /contacts/batch``: creates or updates up to 1,000 contacts by email. Each row is saved
+        independently; invalid rows are reported in ``errors`` with their ``index``."""
+        return cast(ContactBatchResult, await self._client._request("POST", "/contacts/batch", body=dict(params), options=options))
+
     async def list(self, params: Optional[ListContactsParams] = None, options: Optional[RequestOptions] = None) -> ContactList:
         """``GET /contacts``, optionally filtered by ``segment_id``."""
         return cast(ContactList, await self._client._request("GET", "/contacts", query=page_query(params, "segment_id", "audience_id"), options=options))
@@ -373,6 +382,12 @@ class AsyncTemplates(_Resource):
     async def publish(self, id_or_alias: str, options: Optional[RequestOptions] = None) -> ObjectId:
         """``POST /templates/{id_or_alias}/publish``: the published version is what ``template`` sends."""
         return cast(ObjectId, await self._client._request("POST", f"/templates/{seg(require_id(id_or_alias))}/publish", options=options))
+
+    async def preview(self, id_or_alias: str, params: Optional[PreviewTemplateParams] = None, options: Optional[RequestOptions] = None) -> TemplatePreview:
+        """``POST /templates/{id_or_alias}/preview``: renders the draft with ``variables`` without sending.
+        ``missing_variables`` lists the variables with neither a value nor a fallback value."""
+        path = f"/templates/{seg(require_id(id_or_alias))}/preview"
+        return cast(TemplatePreview, await self._client._request("POST", path, body=dict(params or {}), options=options))
 
     async def duplicate(self, id_or_alias: str, options: Optional[RequestOptions] = None) -> ObjectId:
         """``POST /templates/{id_or_alias}/duplicate``"""
